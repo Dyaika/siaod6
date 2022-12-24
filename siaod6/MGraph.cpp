@@ -1,20 +1,5 @@
 #include "MGraph.h"
-
-int MGraph::printChain(int st, int* nodes, int maxL)
-{
-	if (maxL == 0) {
-		return 0;
-	}
-	int r;
-	cout << st + 1 << " ";
-	nodes[st] = 1;
-	for (r = 0; r < n; r++) {
-		if (matrix[st][r] != 0 and nodes[r] == 0) {
-			return printChain(r, nodes, maxL - 1);
-		}
-	}
-	return maxL - 1;
-}
+#include <vector>
 
 MGraph::MGraph(int n)
 {
@@ -54,27 +39,84 @@ bool MGraph::addEdge(int from_p, int to_p, int length, int directions)
 	return true;
 }
 
-//выводит все цепочки в графе, использу€ метод поиска в глубину
-void MGraph::printChains() {
-	int* nodes = new int[n];
-	int len = n;
-	//i - точка старта
+void MGraph::printChainsAB(int init_node, int fin_node, vector<int> path, int *nodes) {
+	nodes[init_node] = 1;
+	path.push_back(init_node + 1);
+	if (init_node == fin_node)
+	{
+		//путь найден, печатаем и возвращаемс€.        
+		cout << "---> ";
+		for (int i = 0; i < path.size(); i++) {
+			cout << " " << path[i];
+		}
+		this->all_paths.push_back(path);
+		cout << endl;
+		return;
+	}
+	
+	//рекурсивно продолжаем поиск дл€ дочерних нод 
 	for (int i = 0; i < n; i++) {
-		len = n;
-		while (len > 1) {
-			for (int j = 0; j < n; j++) {
-				nodes[j] = 0;
-			}
-			len = len - printChain(i, nodes, len) - 1;
-			cout << "\n";
+		int* curnodes = new int[n];
+		for (int j = 0; j < n; j++) {
+			curnodes[j] = nodes[j];
+		}
+		if (matrix[init_node][i] != 0 && init_node != i && nodes[i] == 0) {
+			printChainsAB(i, fin_node, path, curnodes);
+			
 		}
 	}
-	delete[] nodes;
+}
+
+
+//выводит все цепочки в графе, использу€ метод поиска в глубину
+void MGraph::printChains() {
+	all_paths.clear();
+	int* nodes = new int[n];
+	for (int i = 0; i < n; i++) {
+		nodes[i] = 0;
+	}
+	//i - точка старта
+	vector<int> startS;
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			for (int k = 0; k < n; k++) {
+				nodes[k] = 0;
+			}
+			if (i != j) {
+				printChainsAB(i, j, startS, nodes);
+			}
+		}
+	}
 }
 
 //выводит кратчайший путь в графе методом Ђѕостроени€ дерева решенийї
 void MGraph::printShortest(int p1, int p2) {
-
+	vector<int> tmp, tmp1;
+	int min = pow(2, 16) - 1;
+	for (auto k = 0; k < this->all_paths.size(); ++k) {
+		if (this->all_paths[k][0] == p1 && this->all_paths[k][this->all_paths[k].size() - 1] == p2) {
+			tmp = this->all_paths[k];
+			int k = 0;
+			for (auto d = 0; d < tmp.size() - 1; ++d) {
+				k += (this->matrix[tmp[d] - 1][tmp[d + 1] - 1]);
+			}
+			if (k <= min) {
+				tmp1 = tmp;
+				min = k;
+			}
+		}
+	}
+	if (min != pow(2, 16) - 1) {
+		cout << "---> ";
+		for (auto i : tmp1) {
+			std::cout << i << " ";
+		}
+		std::cout << "(length = " << min << ")\n";
+	}
+	else {
+		cout << "no path " << p1 << " -> " << p2 << "\n";
+	}
+	min = pow(2, 16) - 1;
 }
 
 //выводит матрицу смежности
@@ -156,7 +198,10 @@ void MGraph::test() {
 			for (int i = 0; i < g.getN(); i++) {
 				for (int j = 0; j < g.getN(); j++) {
 					if (rand() % 2 != 0) {
-						g.addEdge(i + 1, j + 1, rand() % 100, rand() % 10);
+						if (i != j) {
+							g.addEdge(i + 1, j + 1, rand() % 100, rand() % 10);
+						}
+						
 					}
 				}
 				

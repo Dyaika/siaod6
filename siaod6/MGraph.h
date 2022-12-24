@@ -1,14 +1,18 @@
 #ifndef __MGRAPH_H
 #define __MGRAPH_H
 #include <iostream>
+#include <string>
 #include <random>
+#include <vector>
+#include <set>
 using namespace std;
 class MGraph
 {
 private:
 	int n;
 	int **matrix;
-	int printChain(int st, int* nodes, int maxL);
+	vector<vector<int>> all_paths;
+	void printChainsAB(int init_node, int fin_node, vector<int> path, int *nodes);
 public:
 	struct MyStack
 	{
@@ -59,6 +63,7 @@ public:
 
 	//тестирование функций
 	static void test();
+
 };
 #endif // !__MGRAPH_H
 
